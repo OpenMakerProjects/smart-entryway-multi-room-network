@@ -1,0 +1,21 @@
+{
+  "id": 18,
+  "title": "Smart Entryway Multi-Room Network",
+  "repository_slug": "smart-entryway-multi-room-network",
+  "category": "Smart Home",
+  "platform": "Home Assistant + ESPHome",
+  "platform_family": "esphome",
+  "difficulty": "Advanced",
+  "estimated_hours": 40,
+  "connectivity": "Wi-Fi",
+  "components": [
+    "microphone module",
+    "relay module",
+    "servo motor"
+  ],
+  "scope": "Build a smart home prototype that uses microphone module, relay module, servo motor to coordinate several wireless nodes. Include setup instructions, a circuit diagram, tested firmware, and sample output.",
+  "key_deliverable": "Multi-Room Network demonstration with repeatable test steps",
+  "mode": "telemetry",
+  "entrypoint": "firmware/device.yaml",
+  "roadmap_source": "openmaker-2100-project-roadmap.xlsx"
+}
