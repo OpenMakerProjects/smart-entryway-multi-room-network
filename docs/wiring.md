@@ -1,17 +1,3 @@
-# Wiring guide
+# Wiring
 
-This is a low-voltage prototype wiring plan for **Smart Entryway Multi-Room Network**. Confirm every module's datasheet because breakout-board pinouts vary.
-
-| Component | Suggested pin | Role | Check |
-| --- | --- | --- | --- |
-| microphone module | A2 | Analog input | Confirm the module voltage and pinout before power-up. |
-| relay module | 3 | Digital I/O | Confirm the module voltage and pinout before power-up. |
-| servo motor | 4 | Digital I/O | Confirm the module voltage and pinout before power-up. |
-| Status output | LED_BUILTIN | Output | Use a resistor when an external LED is fitted. |
-
-## Power
-
-- Use a regulated supply sized for the selected modules.
-- Join grounds unless an interface is explicitly isolated.
-- Do not connect mains voltage directly to a development board.
-- Add a fuse, emergency stop, and certified isolation where a real actuator can create risk.
+Build identical circuits forA/B with unique ESPHome names. GPIO34 micOUT≤3.3V, micVCC3.3V/GND. GPIO25relayIN with10kΩ pulldown; GPIO26servoSignal50Hz. External5V≥1A fused1A feedsrelayVCC,relayCOM andservoV+; relayNO→5VLEDlamp+,NCunused;lamp−GND. AllreturnscommonESP32GND. ControllerUSBpowerpositive separate fromexternalsupply. [Circuit](circuit-diagram.svg).

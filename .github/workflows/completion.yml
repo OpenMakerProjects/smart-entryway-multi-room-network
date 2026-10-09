@@ -1,0 +1,25 @@
+name: Completion gates
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  host-board:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python tools/validate.py
+          g++ -std=c++17 tests/mic_test.cpp -o /tmp/display
+          /tmp/display
+          python -m unittest discover -s tests
+          python tools/validate_completion.py
+          pip install esphome==2026.9.1
+          cp firmware/secrets.example.yaml firmware/secrets.yaml
+          python -c "import yaml; yaml.safe_load(open('config/home-assistant-automation.yaml'))"
+          esphome config firmware/node-a.yaml
+          esphome compile firmware/node-a.yaml
+          esphome config firmware/node-b.yaml
+          esphome compile firmware/node-b.yaml

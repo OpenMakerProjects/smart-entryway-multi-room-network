@@ -1,0 +1,24 @@
+# Merge into HA automations after verifying actual discovered entity IDs.
+- alias: Entryway18 coordinate sound indicators
+  id: entryway18_coordinate_sound
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.entryway_node_a_sound_activity
+        - binary_sensor.entryway_node_b_sound_activity
+      to: "on"
+  conditions:
+    - condition: state
+      entity_id: binary_sensor.entryway_node_a_sensor_ok
+      state: "on"
+    - condition: state
+      entity_id: binary_sensor.entryway_node_b_sensor_ok
+      state: "on"
+  actions:
+    - action: switch.turn_on
+      target:
+        entity_id:
+          - switch.entryway_node_a_indicator
+          - switch.entryway_node_b_indicator
+    # Each node independently enforces5s maximum pulse and fail-off.

@@ -1,0 +1,5 @@
+substitutions:
+  node_name: entryway-node-a
+  friendly_name: Entryway Node A
+packages:
+  shared: !include device.yaml
