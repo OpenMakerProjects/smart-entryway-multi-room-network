@@ -4,8 +4,6 @@ substitutions:
 esphome:
   name: ${node_name}
   friendly_name: ${friendly_name}
-  includes:
-    - mic_window.h
   on_boot:
     priority: -100
     then:
@@ -31,10 +29,22 @@ wifi:
     then:
       - script.execute: rest
 globals:
-  - id: window
-    type: MicWindow
+  - id: mic_low
+    type: float
     restore_value: false
-    initial_value: 'MicWindow{}'
+    initial_value: '3.3f'
+  - id: mic_high
+    type: float
+    restore_value: false
+    initial_value: '0.0f'
+  - id: mic_count
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: mic_clean
+    type: bool
+    restore_value: false
+    initial_value: 'true'
 output:
   - platform: ledc
     pin: GPIO26
@@ -98,7 +108,14 @@ sensor:
     update_interval: 10ms
     on_value:
       then:
-        - lambda: id(window).add(x);
+        - lambda: |-
+            if (!std::isfinite(x) || x <= 0.03f || x >= 3.25f) {
+              id(mic_clean) = false;
+            } else {
+              id(mic_low) = std::min(id(mic_low), x);
+              id(mic_high) = std::max(id(mic_high), x);
+              if (id(mic_count) < 100000) ++id(mic_count);
+            }
   - platform: template
     id: peak
     name: Sound Peak
@@ -116,10 +133,15 @@ interval:
   - interval: 1s
     then:
       - lambda: |-
-          id(sound).publish_state(id(window).loud());
-          id(sensor_ok).publish_state(id(window).valid());
-          id(peak).publish_state(id(window).peak());
-          id(window).reset();
+          const bool valid = id(mic_clean) && id(mic_count) >= 20;
+          const float peak_value = valid ? id(mic_high) - id(mic_low) : NAN;
+          id(sound).publish_state(valid && peak_value >= 0.25f);
+          id(sensor_ok).publish_state(valid);
+          id(peak).publish_state(peak_value);
+          id(mic_low) = 3.3f;
+          id(mic_high) = 0.0f;
+          id(mic_count) = 0;
+          id(mic_clean) = true;
       - if:
           condition:
             or:
