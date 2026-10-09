@@ -1,48 +1,129 @@
 substitutions:
-  device_name: smart-entryway-multi-room-netwo
-  friendly_name: "Smart Entryway Multi-Room Network"
-
+  node_name: entryway-node-a
+  friendly_name: Entryway Node A
 esphome:
-  name: ${device_name}
-
+  name: ${node_name}
+  friendly_name: ${friendly_name}
+  includes:
+    - mic_window.h
+  on_boot:
+    priority: -100
+    then:
+      - script.execute: rest
 esp32:
   board: esp32dev
   framework:
-    type: arduino
-
+    type: esp-idf
 logger:
 api:
+  encryption:
+    key: !secret api_key
+  on_client_disconnected:
+    then:
+      - script.execute: rest
 ota:
   - platform: esphome
-
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  ap:
-    ssid: "${friendly_name} Setup"
-
-captive_portal:
-
+  on_disconnect:
+    then:
+      - script.execute: rest
+globals:
+  - id: window
+    type: MicWindow
+    restore_value: false
+    initial_value: 'MicWindow{}'
+output:
+  - platform: ledc
+    pin: GPIO26
+    frequency: 50 Hz
+    id: pointer_pwm
+servo:
+  - id: pointer
+    output: pointer_pwm
+    min_level: 5%
+    idle_level: 7.5%
+    max_level: 10%
+switch:
+  - platform: gpio
+    pin: GPIO25
+    id: relay
+    internal: true
+    restore_mode: ALWAYS_OFF
+  - platform: template
+    name: Indicator
+    id: indicator
+    lambda: return id(relay).state;
+    turn_on_action:
+      - if:
+          condition:
+            and:
+              - api.connected:
+              - binary_sensor.is_on: sensor_ok
+          then:
+            - script.execute: pulse
+          else:
+            - script.execute: rest
+    turn_off_action:
+      - script.execute: rest
+script:
+  - id: pulse
+    mode: restart
+    then:
+      - switch.turn_on: relay
+      - servo.write:
+          id: pointer
+          level: 0%
+      - delay: 5s
+      - switch.turn_off: relay
+      - servo.write:
+          id: pointer
+          level: -100%
+  - id: rest
+    mode: restart
+    then:
+      - script.stop: pulse
+      - switch.turn_off: relay
+      - servo.write:
+          id: pointer
+          level: -100%
 sensor:
   - platform: adc
     pin: GPIO34
-    name: "Primary input"
-    id: primary_input
-    update_interval: 1s
-    attenuation: auto
-
-output:
-  - platform: gpio
-    pin: GPIO2
-    id: status_output
-
+    id: mic_voltage
+    internal: true
+    attenuation: 12db
+    update_interval: 10ms
+    on_value:
+      then:
+        - lambda: id(window).add(x);
+  - platform: template
+    id: peak
+    name: Sound Peak
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    update_interval: never
+binary_sensor:
+  - platform: template
+    name: Sound Activity
+    id: sound
+  - platform: template
+    name: Sensor OK
+    id: sensor_ok
 interval:
   - interval: 1s
     then:
+      - lambda: |-
+          id(sound).publish_state(id(window).loud());
+          id(sensor_ok).publish_state(id(window).valid());
+          id(peak).publish_state(id(window).peak());
+          id(window).reset();
       - if:
           condition:
-            lambda: return id(primary_input).state >= 0.63f;
+            or:
+              - binary_sensor.is_off: sensor_ok
+              - not:
+                  api.connected:
           then:
-            - output.turn_on: status_output
-          else:
-            - output.turn_off: status_output
+            - script.execute: rest

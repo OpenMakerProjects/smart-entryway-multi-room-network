@@ -1,0 +1,2 @@
+{"node":"entryway-node-a","sound_peak_v":0.30,"sound_activity":true,"sensor_ok":true,"indicator":false}
+{"node":"entryway-node-b","sound_peak_v":0.02,"sound_activity":false,"sensor_ok":true,"indicator":true}
