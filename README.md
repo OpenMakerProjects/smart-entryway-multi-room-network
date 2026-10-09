@@ -46,7 +46,7 @@ esphome compile firmware/node-a.yaml
 esphome run firmware/node-a.yaml
 esphome run firmware/node-b.yaml
 ```
-Choose each board’s USB port. Generate a private 32-byte API key with `openssl rand -base64 32`; keep it in ignored secrets.yaml and enter it when adding both devices to HA. The all-zero published key is a CI dummy and must not be deployed. For distinct keys per node, maintain separate private configuration directories. Flash by USB first; use authorized network access for subsequent ESPHome OTA.
+Choose each board’s USB port. Generate a private 32-byte API key with `openssl rand -base64 32`; keep it in ignored secrets.yaml and enter it when adding both devices to HA. The public non-zero example key is a CI dummy and must not be deployed. For distinct keys per node, maintain separate private configuration directories. Flash by USB first; use authorized network access for subsequent ESPHome OTA.
 
 ## Configuration
 Defaults: ADC sample interval 10ms, one-second windows, at least 20 valid samples, sound threshold 0.25V peak-to-peak, clipping at ≤0.03V or ≥3.25V, and five-second pulses. These are uncalibrated demonstration values. Servo PWM is 50Hz with 1–2ms endpoints; rest is -100% (1ms), active is 0% (1.5ms). Actual angles depend on the servo. Verify travel before attaching the loose pointer.
@@ -64,7 +64,7 @@ Native API exposes Sound Peak in volts, Sound Activity, Sensor OK, and Indicator
 Unavailable API: check private key, SSID, unique names and network access. No sound event: inspect microphone bias, threshold and Sensor OK. One indicator: verify actual HA entity IDs, both Sensor OK states and API connections. Servo jitter: inspect supply current, ground and pulse calibration. An active-low relay is incompatible with this circuit.
 
 ## Limitations and domain safety
-Sound activity cannot identify people or understand speech. False events and network delays are possible; there is no synchronized clock or certified safety guarantee. Relays drive low-voltage lamps and servos move loose pointers only. Do not connect mains, locks, egress equipment or other critical loads. GPIO is 3.3V; coil and servo power are external. Keep fused supplies, wires and moving pointers away from pinch points.
+Sound activity cannot identify people or understand speech. The 100Hz sampling can alias audio and is a crude sound-event detector, not an audio meter. False events and network delays are possible; there is no synchronized clock or certified safety guarantee. Relays drive low-voltage lamps and servos move loose pointers only. Do not connect mains, locks, egress equipment or other critical loads. GPIO is 3.3V; coil and servo power are external. Keep fused supplies, wires and moving pointers away from pinch points.
 
 ## Future work
 Measure latency and false positives, add hardware-in-loop fault tests, and validate authenticated control policies on real nodes.
